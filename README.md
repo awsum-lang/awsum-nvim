@@ -5,7 +5,7 @@ Neovim plugin for the [Awsum](https://awsum-lang.org) programming language (`.aw
 ## Features
 
 - Syntax highlighting (Tree-sitter)
-- Format on save
+- Code formatting (`awsum format`)
 - Inline diagnostics (errors + warnings)
 - Quick fixes (code actions)
 - Document symbols (Structure view / breadcrumbs)
@@ -26,20 +26,13 @@ All of the above are powered by the `awsum` compiler's bundled language server �
 
 The snippets below pin to **`v0.0.4`**. Replace it with the version of `awsum` you have installed — plugin and compiler must match (see [Versioning](#versioning)).
 
+The tree-sitter parser binary is compiled the first time you open a `.aww` file (~1 second, cached on disk afterward). You don't need to wire an install-time build hook — the plugin handles it automatically.
+
 ### Option 1: vim.pack (built-in, no extra dependencies)
 
-Neovim 0.12+ ships [`vim.pack`](https://neovim.io/doc/user/pack/) as its built-in plugin manager. Place these two blocks in `~/.config/nvim/init.lua`:
+Neovim 0.12+ ships [`vim.pack`](https://neovim.io/doc/user/pack/) as its built-in plugin manager. Add to `~/.config/nvim/init.lua`:
 
 ```lua
-vim.api.nvim_create_autocmd("PackChanged", {
-  callback = function(ev)
-    if ev.data.spec.name == "awsum-nvim"
-       and (ev.data.kind == "install" or ev.data.kind == "update") then
-      require("awsum").build_parser()
-    end
-  end,
-})
-
 vim.pack.add({
   { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.4" },
 })
@@ -53,7 +46,6 @@ If you already use [lazy.nvim](https://lazy.folke.io/), save the spec to `~/.con
 return {
   "awsum-lang/awsum-nvim",
   tag = "v0.0.4",
-  build = function() require("awsum").build_parser() end,
   ft = "aww",
 }
 ```
@@ -65,10 +57,52 @@ If your config keeps plugin specs inline, drop the `return` and paste the table 
 ```sh
 git clone --branch v0.0.4 https://github.com/awsum-lang/awsum-nvim \
   ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
-cd ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
-nvim --headless --noplugin -c "set rtp+=." \
-     -c "lua require('awsum.build_parser').build()" -c "q"
 ```
+
+## Usage
+
+Syntax highlighting and diagnostics activate automatically on `.aww` files. Other LSP features are invoked the standard Neovim way.
+
+### Formatting
+
+One-shot, from inside Neovim:
+
+```vim
+:lua vim.lsp.buf.format()
+```
+
+Bind a keymap (in `~/.config/nvim/init.lua`):
+
+```lua
+vim.keymap.set('n', '<leader>f', vim.lsp.buf.format, { desc = 'Format buffer' })
+```
+
+Format on save:
+
+```lua
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = '*.aww',
+  callback = function() vim.lsp.buf.format() end,
+})
+```
+
+### Diagnostics
+
+| Action | Default keymap (Neovim 0.10+) | Ex-command |
+|---|---|---|
+| Open diagnostic at cursor in floating window | `<C-w>d` | `:lua vim.diagnostic.open_float()` |
+| Jump to next diagnostic | `]d` | `:lua vim.diagnostic.goto_next()` |
+| Jump to previous diagnostic | `[d` | `:lua vim.diagnostic.goto_prev()` |
+
+### Code actions, symbols
+
+```vim
+:lua vim.lsp.buf.code_action()
+:lua vim.lsp.buf.document_symbol()
+:lua vim.lsp.buf.workspace_symbol()
+```
+
+Bind to your own keymaps as you prefer.
 
 ## Configuration
 
@@ -87,7 +121,6 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 {
   "awsum-lang/awsum-nvim",
   tag = "v0.0.4",
-  build = function() require("awsum").build_parser() end,
   ft = "aww",
   opts = { cmd = { "/custom/path/awsum", "lsp", "--stdio" } },
 }
