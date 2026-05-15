@@ -1,0 +1,8 @@
+# Compiled parser binary — produced by `just build-parser` on each user's machine
+parser/
+
+# Headless Neovim log spill (from `just build-parser` when ShaDa is unavailable)
+nvim.log
+
+# macOS Finder
+.DS_Store

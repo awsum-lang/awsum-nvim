@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  workflow_call:
+
+jobs:
+  drift-check:
+    name: Vendored tree-sitter matches pinned ref
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout awsum-nvim
+        uses: actions/checkout@v6
+        with:
+          path: awsum-nvim
+
+      - name: Read pinned ref
+        id: pin
+        run: echo "ref=$(tr -d ' \n' < awsum-nvim/.tree-sitter-awsum-rev)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tree-sitter-awsum at pinned ref
+        uses: actions/checkout@v6
+        with:
+          repository: awsum-lang/tree-sitter-awsum
+          ref: ${{ steps.pin.outputs.ref }}
+          path: tree-sitter-awsum
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Check drift
+        working-directory: awsum-nvim
+        run: just check
+
+  build-parser:
+    name: Build parser (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      # Windows: clang's default target is `x86_64-pc-windows-msvc`, which
+      # invokes `link.exe`. VS 2022 is preinstalled on windows-latest but its
+      # Developer Command Prompt env (PATH/INCLUDE/LIB) is not activated by
+      # default. We run vcvars64.bat ourselves (no third-party action) and pipe
+      # the resulting environment into $GITHUB_ENV so subsequent steps inherit
+      # PATH / INCLUDE / LIB with MSVC tools on it. `vswhere.exe` is preinstalled
+      # by every Visual Studio install (well-known location).
+      - name: Activate MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VS_INSTALL=%%i"
+          call "%VS_INSTALL%\VC\Auxiliary\Build\vcvars64.bat"
+          for /f "tokens=1,* delims==" %%a in ('set') do echo %%a=%%b>>"%GITHUB_ENV%"
+
+      # Wrap the Lua call in pcall + `cquit 1` so a build_parser failure
+      # propagates to a non-zero nvim exit (headless nvim otherwise swallows
+      # Lua errors and exits 0 because of the trailing `-c "q"`).
+      - name: Build parser
+        shell: bash
+        run: |
+          nvim --headless --noplugin \
+            -c "set rtp+=." \
+            -c "lua local ok, err = pcall(require('awsum.build_parser').build); if not ok then io.stderr:write(tostring(err)) vim.cmd('cquit 1') end" \
+            -c "q"
+
+      - name: Verify parser artifact exists
+        shell: bash
+        run: |
+          set -e
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            expected=parser/awsum.dll
+          else
+            expected=parser/awsum.so
+          fi
+          echo "Expected artifact: $expected"
+          echo "Contents of parser/:"
+          if [ -d parser ]; then
+            ls -la parser
+          else
+            echo "(parser/ directory does not exist)"
+          fi
+          test -f "$expected"
