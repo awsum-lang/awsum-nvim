@@ -49,15 +49,31 @@ jobs:
           neovim: true
           version: stable
 
+      # Wrap the Lua call in pcall + `cquit 1` so a build_parser failure
+      # propagates to a non-zero nvim exit (headless nvim otherwise swallows
+      # Lua errors and exits 0 because of the trailing `-c "q"`).
       - name: Build parser
         shell: bash
-        run: nvim --headless --noplugin -c "set rtp+=." -c "lua require('awsum.build_parser').build()" -c "q"
+        run: |
+          nvim --headless --noplugin \
+            -c "set rtp+=." \
+            -c "lua local ok, err = pcall(require('awsum.build_parser').build); if not ok then io.stderr:write(tostring(err)) vim.cmd('cquit 1') end" \
+            -c "q"
 
       - name: Verify parser artifact exists
         shell: bash
         run: |
+          set -e
           if [ "$RUNNER_OS" = "Windows" ]; then
-            test -f parser/awsum.dll
+            expected=parser/awsum.dll
           else
-            test -f parser/awsum.so
+            expected=parser/awsum.so
           fi
+          echo "Expected artifact: $expected"
+          echo "Contents of parser/:"
+          if [ -d parser ]; then
+            ls -la parser
+          else
+            echo "(parser/ directory does not exist)"
+          fi
+          test -f "$expected"
