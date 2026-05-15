@@ -69,6 +69,21 @@ function M.build()
       src_dir .. "/scanner.c",
       "/Fe:" .. out_path,
     }
+  elseif is_windows() then
+    -- clang/gcc on Windows: -fPIC is unsupported on the MSVC-compatible target
+    -- (and a no-op on Windows in general, since all code is position-independent
+    -- by default). -shared still produces a .dll.
+    cmd = {
+      cc,
+      "-O2",
+      "-shared",
+      "-I",
+      src_dir,
+      src_dir .. "/parser.c",
+      src_dir .. "/scanner.c",
+      "-o",
+      out_path,
+    }
   else
     cmd = {
       cc,

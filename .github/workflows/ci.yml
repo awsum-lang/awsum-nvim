@@ -49,6 +49,21 @@ jobs:
           neovim: true
           version: stable
 
+      # Windows: clang's default target is `x86_64-pc-windows-msvc`, which
+      # invokes `link.exe`. VS 2022 is preinstalled on windows-latest but its
+      # Developer Command Prompt env (PATH/INCLUDE/LIB) is not activated by
+      # default. We run vcvars64.bat ourselves (no third-party action) and pipe
+      # the resulting environment into $GITHUB_ENV so subsequent steps inherit
+      # PATH / INCLUDE / LIB with MSVC tools on it. `vswhere.exe` is preinstalled
+      # by every Visual Studio install (well-known location).
+      - name: Activate MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VS_INSTALL=%%i"
+          call "%VS_INSTALL%\VC\Auxiliary\Build\vcvars64.bat"
+          for /f "tokens=1,* delims==" %%a in ('set') do echo %%a=%%b>>"%GITHUB_ENV%"
+
       # Wrap the Lua call in pcall + `cquit 1` so a build_parser failure
       # propagates to a non-zero nvim exit (headless nvim otherwise swallows
       # Lua errors and exits 0 because of the trailing `-c "q"`).

@@ -20,7 +20,7 @@ All of the above are powered by the `awsum` compiler's bundled language server â
 - A C compiler, to compile the bundled Tree-sitter parser once at install time:
     - **macOS**: `xcode-select --install` (Xcode Command Line Tools).
     - **Linux**: `build-essential` (Debian/Ubuntu) / `base-devel` (Arch) / equivalent.
-    - **Windows**: clang, gcc, or MSVC Build Tools on `PATH`.
+    - **Windows**: run from a "Developer Command Prompt for VS" after installing [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) so MSVC `cl.exe` + `link.exe` are on `PATH`. MinGW `gcc` also works if available. Standalone LLVM Clang alone is *not* sufficient â€” it relies on `link.exe` from MSVC.
 
 ## Install
 
