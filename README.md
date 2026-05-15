@@ -24,6 +24,8 @@ All of the above are powered by the `awsum` compiler's bundled language server â
 
 ## Install
 
+The snippets below pin to **`v0.0.4`**. Replace it with the version of `awsum` you have installed â€” plugin and compiler must match (see [Versioning](#versioning)).
+
 ### Option 1: vim.pack (built-in, no extra dependencies)
 
 Neovim 0.12+ ships [`vim.pack`](https://neovim.io/doc/user/pack/) as its built-in plugin manager. Place these two blocks in `~/.config/nvim/init.lua`:
@@ -38,7 +40,9 @@ vim.api.nvim_create_autocmd("PackChanged", {
   end,
 })
 
-vim.pack.add({ "https://github.com/awsum-lang/awsum-nvim" })
+vim.pack.add({
+  { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.4" },
+})
 ```
 
 ### Option 2: lazy.nvim
@@ -48,6 +52,7 @@ If you already use [lazy.nvim](https://lazy.folke.io/), save the spec to `~/.con
 ```lua
 return {
   "awsum-lang/awsum-nvim",
+  tag = "v0.0.4",
   build = function() require("awsum").build_parser() end,
   ft = "aww",
 }
@@ -58,7 +63,7 @@ If your config keeps plugin specs inline, drop the `return` and paste the table 
 ### Option 3: Manual
 
 ```sh
-git clone https://github.com/awsum-lang/awsum-nvim \
+git clone --branch v0.0.4 https://github.com/awsum-lang/awsum-nvim \
   ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
 cd ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
 nvim --headless --noplugin -c "set rtp+=." \
@@ -81,6 +86,7 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 ```lua
 {
   "awsum-lang/awsum-nvim",
+  tag = "v0.0.4",
   build = function() require("awsum").build_parser() end,
   ft = "aww",
   opts = { cmd = { "/custom/path/awsum", "lsp", "--stdio" } },
