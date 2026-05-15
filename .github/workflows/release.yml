@@ -1,0 +1,65 @@
+name: Release
+
+# Tag is the source of truth: pushing `v*` is what creates an immutable release
+# tied to a specific commit. There is intentionally no `workflow_dispatch` here —
+# if a release run fails, delete the tag, fix, retag.
+on:
+  push:
+    tags:
+      - "v*"
+
+# Don't cancel a release mid-flight if a second tag arrives somehow.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Plugin ships its version inside `lua/awsum/version.lua` — the runtime reads
+  # it and sends it to the server as `expectedAwsumVersion`. A tag / version.lua
+  # mismatch would make the LSP version check warn for every user on first open.
+  # Fail fast before publishing the release.
+  verify-version:
+    name: Verify tag matches lua/awsum/version.lua
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check version
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          pkg_version=$(grep -m1 '^return' lua/awsum/version.lua | sed 's/.*"\(.*\)".*/\1/')
+          if [[ "$tag_version" != "$pkg_version" ]]; then
+            echo "Tag $GITHUB_REF_NAME implies version $tag_version, but lua/awsum/version.lua has $pkg_version" >&2
+            exit 1
+          fi
+
+  ci:
+    needs: verify-version
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Publish GitHub Release
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      # Required for `gh release create`.
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      # Neovim plugins have no installable binary artifact — users compile the
+      # tree-sitter parser locally via the plugin's build hook on install.
+      # GitHub auto-attaches source `.tar.gz` and `.zip` to every Release based
+      # on the tagged commit, which is all dotfyle / nixpkgs / luarocks-class
+      # consumers need to pull from. So no asset upload, no provenance attestation.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "See [CHANGELOG.md](./CHANGELOG.md)"

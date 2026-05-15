@@ -3,3 +3,6 @@ parser/
 
 # Headless Neovim log spill (from `just build-parser` when ShaDa is unavailable)
 nvim.log
+
+# macOS Finder
+.DS_Store
