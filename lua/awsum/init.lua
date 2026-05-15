@@ -54,14 +54,39 @@ function M.setup(opts)
   end
 end
 
+local function plugin_root()
+  local source = debug.getinfo(1, "S").source:sub(2)
+  return vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source)))
+end
+
+local function parser_path()
+  local ext = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1) and ".dll" or ".so"
+  return plugin_root() .. "/parser/awsum" .. ext
+end
+
 local function start_treesitter(buf)
+  -- Self-heal: if the parser binary is missing (install-time hook didn't run,
+  -- plugin was placed manually, etc.), compile it inline on the first `.aww`
+  -- open. Synchronous — blocks the UI for ~1s once; subsequent opens are
+  -- instant because the binary is cached on disk.
+  if not vim.uv.fs_stat(parser_path()) then
+    vim.notify("awsum-nvim: compiling tree-sitter parser…", vim.log.levels.INFO)
+    local build_ok, build_err = pcall(M.build_parser)
+    if not build_ok then
+      vim.notify(
+        "awsum-nvim: tree-sitter parser build failed ("
+          .. tostring(build_err)
+          .. ").\nRun `:lua require('awsum').build_parser()` manually to see full output.",
+        vim.log.levels.WARN
+      )
+      return
+    end
+  end
+
   local ok, err = pcall(vim.treesitter.start, buf, "awsum")
   if not ok then
     vim.notify(
-      "awsum-nvim: tree-sitter highlighting unavailable ("
-        .. tostring(err)
-        .. ").\nRun `:lua require('awsum').build_parser()` to compile the parser, "
-        .. "or set `build = function() require('awsum').build_parser() end` in your plugin spec.",
+      "awsum-nvim: tree-sitter highlighting unavailable (" .. tostring(err) .. ").",
       vim.log.levels.WARN
     )
   end
