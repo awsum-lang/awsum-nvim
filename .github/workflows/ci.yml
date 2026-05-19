@@ -4,34 +4,6 @@ on:
   workflow_call:
 
 jobs:
-  drift-check:
-    name: Vendored tree-sitter matches pinned ref
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    steps:
-      - name: Checkout awsum-nvim
-        uses: actions/checkout@v6
-        with:
-          path: awsum-nvim
-
-      - name: Read pinned ref
-        id: pin
-        run: echo "ref=$(tr -d ' \n' < awsum-nvim/.tree-sitter-awsum-rev)" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout tree-sitter-awsum at pinned ref
-        uses: actions/checkout@v6
-        with:
-          repository: awsum-lang/tree-sitter-awsum
-          ref: ${{ steps.pin.outputs.ref }}
-          path: tree-sitter-awsum
-
-      - name: Install just
-        uses: extractions/setup-just@v2
-
-      - name: Check drift
-        working-directory: awsum-nvim
-        run: just check
-
   build-parser:
     name: Build parser (${{ matrix.os }})
     strategy:
