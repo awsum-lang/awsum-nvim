@@ -35,13 +35,49 @@ jobs:
             exit 1
           fi
 
+  # Release-time invariant: vendored tree-sitter sources must match the upstream
+  # ref recorded in .tree-sitter-awsum-rev. During day-to-day cross-repo
+  # development, both sides are edited together and would always show drift
+  # until the next tree-sitter-awsum tag — so this check only fires at tag time
+  # (the moment the .tree-sitter-awsum-rev pin becomes a release artifact).
+  # If it fails, delete the tag, run `just vendor-update <correct-ref>`,
+  # commit, retag.
+  drift-check:
+    name: Vendored tree-sitter matches pinned ref
+    needs: verify-version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout awsum-nvim
+        uses: actions/checkout@v6
+        with:
+          path: awsum-nvim
+
+      - name: Read pinned ref
+        id: pin
+        run: echo "ref=$(tr -d ' \n' < awsum-nvim/.tree-sitter-awsum-rev)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tree-sitter-awsum at pinned ref
+        uses: actions/checkout@v6
+        with:
+          repository: awsum-lang/tree-sitter-awsum
+          ref: ${{ steps.pin.outputs.ref }}
+          path: tree-sitter-awsum
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Check drift
+        working-directory: awsum-nvim
+        run: just check
+
   ci:
     needs: verify-version
     uses: ./.github/workflows/ci.yml
 
   release:
     name: Publish GitHub Release
-    needs: ci
+    needs: [ci, drift-check]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
