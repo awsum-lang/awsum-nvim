@@ -10,6 +10,10 @@ Until `awsum 1.0.0`, the project does not follow SemVer — every release increm
 
 ## [Unreleased]
 
+### Added
+
+- `:AwsumRestartLspServer` user command — stops the `awsum lsp` process and starts a new one with the same `init_options`. Implemented as `vim.lsp.enable('awsum', false)` followed by `vim.lsp.enable('awsum')`. Useful after a local `stack install` of a new `awsum` build, or to clear any in-memory state on the server. No default keymap.
+
 ### Fixed
 
 - Bare type references (`Int32` in `unused : Int32`, leaves of `A -> B`, `A | B`) now highlight as `@type`. Previously only types inside an explicit `Maybe Int32`-style application were caught; bare leaves of arrow / union / signature-type positions fell through. Picked up from upstream `tree-sitter-awsum` highlight queries.
