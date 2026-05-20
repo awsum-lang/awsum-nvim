@@ -113,6 +113,16 @@ function M.activate()
     end
   end
 
+  vim.api.nvim_create_user_command("AwsumRestartLspServer", function()
+    -- Stop, then re-enable: `vim.lsp.enable('awsum', false)` shuts down every
+    -- attached awsum client; `vim.lsp.enable('awsum')` re-attaches on the next
+    -- FileType match. Re-asserting `vim.lsp.config` would be redundant —
+    -- `activate()` already registered it for the lifetime of the session.
+    vim.lsp.enable("awsum", false)
+    vim.lsp.enable("awsum")
+    vim.notify("awsum-nvim: LSP server restarted.", vim.log.levels.INFO)
+  end, { desc = "Restart the Awsum LSP server." })
+
   state.activated = true
 end
 

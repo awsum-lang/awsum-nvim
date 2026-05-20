@@ -132,6 +132,14 @@ vim.api.nvim_create_autocmd('BufWritePre', {
 
 Bind to your own keymaps as you prefer.
 
+### Restart the LSP server
+
+```vim
+:AwsumRestartLspServer
+```
+
+Stops the `awsum lsp` process and starts a new one with the same settings. Useful after a local `stack install` of a new `awsum` build, or to clear any in-memory state on the server. No default keymap; bind via `vim.keymap.set` if you use it often.
+
 ## Configuration
 
 The plugin works with zero configuration. To override defaults, call `setup` with the fields you want to change:
