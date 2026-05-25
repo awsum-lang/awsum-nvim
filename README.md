@@ -175,6 +175,10 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 - IntelliJ Platform plugin: [awsum-lang/awsum-intellij](https://github.com/awsum-lang/awsum-intellij)
 - Website: [awsum-lang.org](https://awsum-lang.org)
 
+## AI use
+
+This Neovim plugin is developed with substantial usage of generative AI. Every generated change is reviewed, edited, and accepted by a human before it lands in the repository, and no output is shipped unedited.
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
