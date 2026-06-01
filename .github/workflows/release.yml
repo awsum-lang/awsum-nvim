@@ -65,7 +65,7 @@ jobs:
           path: tree-sitter-awsum
 
       - name: Install just
-        uses: extractions/setup-just@v2
+        uses: extractions/setup-just@v4
 
       - name: Check drift
         working-directory: awsum-nvim
