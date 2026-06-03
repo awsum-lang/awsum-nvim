@@ -10,6 +10,12 @@ Until `awsum 1.0.0`, the project does not follow SemVer — every release increm
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-06-03
+
+### Changed
+
+- Lockstep release with `awsum` 0.0.6. Vendored Tree-sitter snapshot re-synced to `tree-sitter-awsum` v0.0.6 — grammar unchanged, only the embedded version marker moved.
+
 ## [0.0.5] - 2026-05-31
 
 ### Added
