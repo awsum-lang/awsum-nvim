@@ -10,6 +10,12 @@ Until `awsum 1.0.0`, the project does not follow SemVer — every release increm
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-06-22
+
+### Changed
+
+- Lockstep release with `awsum` 0.0.7. Vendored Tree-sitter snapshot re-synced to `tree-sitter-awsum` v0.0.7: the parser picks up the 0.0.7 grammar (parameter-position type ascription `(p : T)`, own-line `let` signatures) and the nested-`let` / operator-continuation scanner fixes. Highlight queries unchanged.
+
 ## [0.0.6] - 2026-06-03
 
 ### Changed

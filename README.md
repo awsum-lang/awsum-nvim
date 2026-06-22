@@ -24,7 +24,7 @@ All of the above are powered by the `awsum` compiler's bundled language server �
 
 ## Install
 
-The snippets below pin to **`v0.0.6`**. Replace it with the version of `awsum` you have installed — plugin and compiler must match (see [Versioning](#versioning)).
+The snippets below pin to **`v0.0.7`**. Replace it with the version of `awsum` you have installed — plugin and compiler must match (see [Versioning](#versioning)).
 
 The tree-sitter parser binary is compiled the first time you open a `.aww` file (~1 second, cached on disk afterward). You don't need to wire an install-time build hook — the plugin handles it automatically.
 
@@ -34,7 +34,7 @@ Neovim 0.12+ ships [`vim.pack`](https://neovim.io/doc/user/pack/) as its built-i
 
 ```lua
 vim.pack.add({
-  { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.6" },
+  { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.7" },
 })
 
 -- To update later:
@@ -53,7 +53,7 @@ If you already use [lazy.nvim](https://lazy.folke.io/), save the spec to `~/.con
 ```lua
 return {
   "awsum-lang/awsum-nvim",
-  tag = "v0.0.6",
+  tag = "v0.0.7",
   ft = "aww",
 }
 
@@ -69,7 +69,7 @@ If your config keeps plugin specs inline, drop the `return` and paste the table 
 ### Option 3: Manual
 
 ```sh
-git clone --branch v0.0.6 https://github.com/awsum-lang/awsum-nvim \
+git clone --branch v0.0.7 https://github.com/awsum-lang/awsum-nvim \
   ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
 ```
 
@@ -78,7 +78,7 @@ To update later:
 ```sh
 cd ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
 git fetch --tags
-git checkout v0.0.6.1   # or whatever new tag matches your awsum
+git checkout vX.Y.Z   # the new tag matching your awsum
 ```
 
 To uninstall:
@@ -156,7 +156,7 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 ```lua
 {
   "awsum-lang/awsum-nvim",
-  tag = "v0.0.6",
+  tag = "v0.0.7",
   ft = "aww",
   opts = { cmd = { "/custom/path/awsum", "lsp", "--stdio" } },
 }
