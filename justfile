@@ -66,11 +66,15 @@ uninstall-local:
 build-parser:
   nvim --headless --noplugin -c "set rtp+=." -c "lua require('awsum.build_parser').build()" -c "q"
 
+# Regression test: a parser binary built from other sources is rebuilt on the next `.aww` open
+test:
+  nvim --headless --clean -c "set rtp^=." -c "lua local ok, err = pcall(dofile, 'scripts/test-parser-rebuild.lua'); if not ok then io.stderr:write(tostring(err) .. '\\n'); vim.cmd('cquit 1') end" -c "qa!"
+
 # Re-vendor parser sources and queries from the sibling tree-sitter-awsum at <ref>
 vendor-update ref:
   scripts/vendor-update.sh {{ref}}
 
-# Verify vendored files match tree-sitter-awsum at the pinned ref (CI gates this)
+# Verify vendored files match tree-sitter-awsum at the pinned ref (the release workflow gates every tag on this)
 check:
   scripts/check-drift.sh
 

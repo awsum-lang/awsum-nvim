@@ -11,18 +11,19 @@ just install-local         # Symlink this checkout into ~/.local/share/nvim/site
 just uninstall-local       # Remove the symlink; vendored parser binary in parser/ is left intact
 just build-parser          # Compile parser/awsum.{so,dll} from vendored src/parser.c + src/scanner.c
 just vendor-update <ref>   # Re-pull parser sources and queries from the sibling tree-sitter-awsum at <ref>
-just check                 # Verify vendored files match tree-sitter-awsum at the ref in .tree-sitter-awsum-rev — CI gates on this
+just check                 # Verify vendored files match tree-sitter-awsum at the ref in .tree-sitter-awsum-rev — the release workflow gates every tag on this
+just test                  # Regression test: a parser binary built from other sources is rebuilt on the next `.aww` open (needs a C compiler)
 ```
 
 The plugin targets Neovim 0.12+ and uses only built-in APIs — no `nvim-lspconfig`, no `nvim-treesitter`, no other third-party plugin. Local development needs Neovim 0.12+ on `PATH`, the `awsum` CLI on `PATH` (for end-to-end testing through `vim.lsp`), and a C compiler (so `just build-parser` can compile the vendored Tree-sitter sources into `parser/awsum.so` / `.dll`).
 
-After `just install-local`, any subsequent `nvim file.aww` auto-loads the plugin from the symlinked checkout — edits to Lua sources take effect on the next file open. The parser binary only rebuilds when `just build-parser` is rerun (or when `start_treesitter`'s self-heal triggers because it's missing).
+After `just install-local`, any subsequent `nvim file.aww` auto-loads the plugin from the symlinked checkout — edits to Lua sources take effect on the next file open. The parser binary rebuilds when `just build-parser` is rerun, and on the next `.aww` open whenever it is missing or its sources changed (the fingerprint the build recorded in `.parser.sha256` no longer matches).
 
 ## Tree-sitter vendoring
 
 The plugin ships generated parser sources (`src/parser.c`, `src/scanner.c`, `src/tree_sitter/parser.h`) and Tree-sitter queries (`queries/awsum/*.scm`) directly, pinned to a specific ref of [`awsum-lang/tree-sitter-awsum`](https://github.com/awsum-lang/tree-sitter-awsum) recorded in [.tree-sitter-awsum-rev](.tree-sitter-awsum-rev). The rationale and full mechanism are in [README.md](README.md#related); the short version is that only a C compiler is required on the user's machine, not the `tree-sitter-cli` toolchain or any `nvim-treesitter`-class manager.
 
-When upstream ships a new tag, sync with `just vendor-update <tag>`: the script copies parser sources and queries from the sibling `../tree-sitter-awsum` checkout at the given ref and bumps `.tree-sitter-awsum-rev`. CI gates `just check` on every push and PR — vendored files must match upstream at the pinned ref byte-for-byte.
+When upstream ships a new tag, sync with `just vendor-update <tag>`: the script copies parser sources and queries from the sibling `../tree-sitter-awsum` checkout at the given ref and bumps `.tree-sitter-awsum-rev`. The release workflow gates every tag on `just check` — vendored files must match upstream at the pinned ref byte-for-byte.
 
 ## Developer Certificate of Origin
 

@@ -10,6 +10,19 @@ Until `awsum 1.0.0`, the project does not follow SemVer — every release increm
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-11-08
+
+### Fixed
+
+- **A plugin update now recompiles the Tree-sitter parser.** Plugin managers update the checkout in place and leave the compiled `parser/awsum.{so,dll}` behind, and the plugin compiled it only when it was missing — so a grammar fix in a new release never reached existing users. Each build now records a fingerprint of the parser sources (`.parser.sha256`), and the first `.aww` open after an update that changed them recompiles the parser (about a second, once). Pinned by `just test`, which CI runs on Linux, macOS and Windows.
+- **Nested block comments highlight correctly.** The vendored Tree-sitter snapshot is re-synced to `tree-sitter-awsum` 0.0.8, which parses `{- outer {- inner -} more -}` as one comment; before, a nested comment broke highlighting of the declaration after it.
+
+### Changed
+
+- Lockstep release with `awsum` 0.0.8.
+- The README lists hover (type and doc comment of the name under the cursor). `awsum lsp` has served it since 0.0.5; only the documentation was missing it.
+- CI: every GitHub Action pinned to the commit SHA of a release at least 7 days old, and Neovim to exactly v0.12.6.
+
 ## [0.0.7] - 2026-06-22
 
 ### Changed

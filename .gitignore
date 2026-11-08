@@ -1,6 +1,9 @@
 # Compiled parser binary — produced by `just build-parser` on each user's machine
 parser/
 
+# Fingerprint of the parser sources the binary was built from (see lua/awsum/build_parser.lua)
+.parser.sha256
+
 # Headless Neovim log spill (from `just build-parser` when ShaDa is unavailable)
 nvim.log
 
