@@ -13,13 +13,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Neovim
-        uses: rhysd/action-setup-vim@v1
+        uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1.6.1
         with:
           neovim: true
-          version: stable
+          version: v0.12.6
 
       # Windows: clang's default target is `x86_64-pc-windows-msvc`, which
       # invokes `link.exe`. VS 2022 is preinstalled on windows-latest but its
@@ -64,3 +64,14 @@ jobs:
             echo "(parser/ directory does not exist)"
           fi
           test -f "$expected"
+
+      # A parser binary built from other sources must be rebuilt on the next
+      # `.aww` open: plugin managers update the checkout in place and leave the
+      # untracked binary behind.
+      - name: Test stale-parser rebuild
+        shell: bash
+        run: |
+          nvim --headless --clean \
+            -c "set rtp^=." \
+            -c "lua local ok, err = pcall(dofile, 'scripts/test-parser-rebuild.lua'); if not ok then io.stderr:write(tostring(err)) vim.cmd('cquit 1') end" \
+            -c "q"

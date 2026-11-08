@@ -2,7 +2,7 @@
 set -eu
 
 # Verify vendored tree-sitter sources match tree-sitter-awsum at the ref
-# recorded in .tree-sitter-awsum-rev. CI gates the repo on this passing.
+# recorded in .tree-sitter-awsum-rev. The release workflow gates every tag on this.
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 target_dir=$(cd "$script_dir/.." && pwd)

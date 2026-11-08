@@ -8,6 +8,7 @@ Neovim plugin for the [Awsum](https://awsum-lang.org) programming language (`.aw
 - Code formatting (`awsum format`)
 - Inline diagnostics (errors + warnings)
 - Quick fixes (code actions)
+- Hover: type and doc comment of the name under the cursor
 - Document symbols (Structure view / breadcrumbs)
 - Workspace symbol search
 
@@ -24,9 +25,9 @@ All of the above are powered by the `awsum` compiler's bundled language server �
 
 ## Install
 
-The snippets below pin to **`v0.0.7`**. Replace it with the version of `awsum` you have installed — plugin and compiler must match (see [Versioning](#versioning)).
+The snippets below pin to **`v0.0.8`**. Replace it with the version of `awsum` you have installed — plugin and compiler must match (see [Versioning](#versioning)).
 
-The tree-sitter parser binary is compiled the first time you open a `.aww` file (~1 second, cached on disk afterward). You don't need to wire an install-time build hook — the plugin handles it automatically.
+The tree-sitter parser binary is compiled the first time you open a `.aww` file (~1 second, cached on disk afterward), and again after an update changes the parser sources. You don't need to wire an install-time build hook — the plugin handles it automatically.
 
 ### Option 1: vim.pack (built-in, no extra dependencies)
 
@@ -34,7 +35,7 @@ Neovim 0.12+ ships [`vim.pack`](https://neovim.io/doc/user/pack/) as its built-i
 
 ```lua
 vim.pack.add({
-  { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.7" },
+  { src = "https://github.com/awsum-lang/awsum-nvim", version = "v0.0.8" },
 })
 
 -- To update later:
@@ -53,7 +54,7 @@ If you already use [lazy.nvim](https://lazy.folke.io/), save the spec to `~/.con
 ```lua
 return {
   "awsum-lang/awsum-nvim",
-  tag = "v0.0.7",
+  tag = "v0.0.8",
   ft = "aww",
 }
 
@@ -69,7 +70,7 @@ If your config keeps plugin specs inline, drop the `return` and paste the table 
 ### Option 3: Manual
 
 ```sh
-git clone --branch v0.0.7 https://github.com/awsum-lang/awsum-nvim \
+git clone --branch v0.0.8 https://github.com/awsum-lang/awsum-nvim \
   ~/.local/share/nvim/site/pack/awsum/start/awsum-nvim
 ```
 
@@ -122,9 +123,12 @@ vim.api.nvim_create_autocmd('BufWritePre', {
 | Jump to next diagnostic                      | `]d`                          | `:lua vim.diagnostic.goto_next()`  |
 | Jump to previous diagnostic                  | `[d`                          | `:lua vim.diagnostic.goto_prev()`  |
 
-### Code actions, symbols
+### Hover, code actions, symbols
+
+Hover is on `K` by default (Neovim 0.10+).
 
 ```vim
+:lua vim.lsp.buf.hover()
 :lua vim.lsp.buf.code_action()
 :lua vim.lsp.buf.document_symbol()
 :lua vim.lsp.buf.workspace_symbol()
@@ -156,7 +160,7 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 ```lua
 {
   "awsum-lang/awsum-nvim",
-  tag = "v0.0.7",
+  tag = "v0.0.8",
   ft = "aww",
   opts = { cmd = { "/custom/path/awsum", "lsp", "--stdio" } },
 }
@@ -165,6 +169,8 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 ## Versioning
 
 `awsum-nvim A.B.C` is built and tested against `awsum A.B.C`. Mismatched versions are not supported — at startup the language server compares the plugin's expected version against its own and shows a notification on mismatch.
+
+Supported editor versions follow Awsum's [platform version policy](https://github.com/awsum-lang/awsum/blob/main/docs/platform-version-policy.md#editors): the minimum is the newest stable release that has been out for at least 7 days.
 
 ## Related
 
@@ -177,7 +183,7 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 
 ## AI use
 
-This Neovim plugin is developed with substantial usage of generative AI. Every generated change is reviewed, edited, and accepted by a human before it lands in the repository, and no output is shipped unedited.
+This Neovim plugin is developed with substantial usage of generative AI.
 
 ## License
 

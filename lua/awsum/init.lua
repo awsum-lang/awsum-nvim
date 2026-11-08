@@ -54,31 +54,49 @@ function M.setup(opts)
   end
 end
 
-local function plugin_root()
-  local source = debug.getinfo(1, "S").source:sub(2)
-  return vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source)))
+-- Make sure the parser binary is compiled from the current sources, compiling
+-- it inline when it is missing or was built from other sources — a plugin update
+-- leaves the old binary behind. Synchronous: blocks the UI for ~1s when it
+-- compiles. Returns whether a binary is available; when a rebuild fails, an
+-- existing binary from older sources is still used.
+function M.ensure_parser()
+  local bp = require("awsum.build_parser")
+  local have = vim.uv.fs_stat(bp.binary_path()) ~= nil
+  if have then
+    local f = io.open(bp.fingerprint_path(), "rb")
+    local recorded = f and f:read("a")
+    if f then
+      f:close()
+    end
+    if recorded == bp.fingerprint() then
+      return true
+    end
+  end
+  vim.notify(
+    have and "awsum-nvim: tree-sitter parser sources changed, recompiling…"
+      or "awsum-nvim: compiling tree-sitter parser…",
+    vim.log.levels.INFO
+  )
+  local build_ok, build_err = pcall(M.build_parser)
+  if build_ok then
+    return true
+  end
+  vim.notify(
+    "awsum-nvim: tree-sitter parser build failed ("
+      .. tostring(build_err)
+      .. ").\nRun `:lua require('awsum').build_parser()` manually to see full output.",
+    vim.log.levels.WARN
+  )
+  return have
 end
 
-local function parser_path()
-  local ext = (vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1) and ".dll" or ".so"
-  return plugin_root() .. "/parser/awsum" .. ext
-end
+-- Checked once per session: the first `.aww` buffer pays for the fingerprint.
+local parser_ready = false
 
 local function start_treesitter(buf)
-  -- Self-heal: if the parser binary is missing (install-time hook didn't run,
-  -- plugin was placed manually, etc.), compile it inline on the first `.aww`
-  -- open. Synchronous — blocks the UI for ~1s once; subsequent opens are
-  -- instant because the binary is cached on disk.
-  if not vim.uv.fs_stat(parser_path()) then
-    vim.notify("awsum-nvim: compiling tree-sitter parser…", vim.log.levels.INFO)
-    local build_ok, build_err = pcall(M.build_parser)
-    if not build_ok then
-      vim.notify(
-        "awsum-nvim: tree-sitter parser build failed ("
-          .. tostring(build_err)
-          .. ").\nRun `:lua require('awsum').build_parser()` manually to see full output.",
-        vim.log.levels.WARN
-      )
+  if not parser_ready then
+    parser_ready = M.ensure_parser()
+    if not parser_ready then
       return
     end
   end

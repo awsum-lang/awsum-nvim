@@ -39,14 +39,39 @@ local function compiler_install_hint()
   end
 end
 
+-- The compiled parser; `parser/` is untracked, so it survives a plugin update.
+function M.binary_path()
+  return plugin_root() .. "/parser/awsum" .. (is_windows() and ".dll" or ".so")
+end
+
+-- Fingerprint of the sources, recorded by each build. Kept outside `parser/`:
+-- Neovim loads the first `parser/awsum.*` it finds as the shared library.
+function M.fingerprint_path()
+  return plugin_root() .. "/.parser.sha256"
+end
+
+-- SHA-256 over everything the binary is compiled from. A plugin update leaves
+-- the old binary behind; comparing this fingerprint with the recorded one tells
+-- whether the binary still matches the sources, whatever version markers or file
+-- dates say.
+function M.fingerprint()
+  local root = plugin_root()
+  local parts = {}
+  for _, rel in ipairs({ "src/parser.c", "src/scanner.c", "src/tree_sitter/parser.h" }) do
+    local f = assert(io.open(root .. "/" .. rel, "rb"))
+    table.insert(parts, rel .. "\n" .. f:read("a"))
+    f:close()
+  end
+  return vim.fn.sha256(table.concat(parts, "\n"))
+end
+
 function M.build()
   local root = plugin_root()
   local src_dir = root .. "/src"
-  local out_dir = root .. "/parser"
-  local ext = is_windows() and ".dll" or ".so"
-  local out_path = out_dir .. "/awsum" .. ext
+  local out_path = M.binary_path()
+  local fingerprint = M.fingerprint()
 
-  vim.fn.mkdir(out_dir, "p")
+  vim.fn.mkdir(vim.fs.dirname(out_path), "p")
 
   local cc = find_cc()
   if not cc then
@@ -110,6 +135,9 @@ function M.build()
     )
   end
 
+  local f = assert(io.open(M.fingerprint_path(), "wb"))
+  f:write(fingerprint)
+  f:close()
   vim.notify("awsum-nvim: built " .. out_path, vim.log.levels.INFO)
 end
 
