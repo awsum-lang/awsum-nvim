@@ -170,7 +170,7 @@ With lazy.nvim, this is idiomatic via the `opts` field:
 
 `awsum-nvim A.B.C` is built and tested against `awsum A.B.C`. Mismatched versions are not supported — at startup the language server compares the plugin's expected version against its own and shows a notification on mismatch.
 
-Supported editor versions follow Awsum's [platform version policy](https://github.com/awsum-lang/awsum/blob/main/docs/platform-version-policy.md#editors): the minimum is the newest stable release that has been out for at least 7 days.
+Supported editor versions follow the Awsum [platform version policy](https://github.com/awsum-lang/awsum/blob/main/docs/platform-version-policy.md#editors): the minimum is the newest stable release that has been out for at least 7 days.
 
 ## Related
 
